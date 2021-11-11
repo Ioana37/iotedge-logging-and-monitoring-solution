@@ -60,7 +60,7 @@ terraform init -backend-config=backend.tfvars -backend-config=storage_account_na
 
 The actual provisioning of the resources happens in this step. The command will display what are the differences between the terraform state file and the new local changes and will prompt manual input of the response `yes` to begin provisioning.
 
-It is possible that this command has an impact on the pre-existent IoT Hub so make sure to carefully review the Terraform plan before agreeing to the changes.
+This command has an impact on the pre-existent IoT Hub. It adds a new IoT Hub endpoint and route. Make sure to carefully review the Terraform plan and that there is no impact to your existing IoT Hub message routing before agreeing to the changes.
 
 This command requires several parameters, specifically those that do not have a default value assigned in the `environment/variable.tf` file.
 
