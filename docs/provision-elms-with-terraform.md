@@ -42,8 +42,7 @@ cd terraform/scripts
 Should a user prefer to not use an Azure storage account and store the Terraform backend locally, then the following code snippet must be removed from the `terraform/environment/main.tf` and the above script won't be required anymore.
 
 ```shell
-provider "azurerm" {
-  features {}
+backend "azurerm" {
 }
 ```
 
