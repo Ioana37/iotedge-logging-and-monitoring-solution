@@ -10,7 +10,7 @@ variable "iot_hub_name" {
   type = string
 }
 
-variable "resource_group_name" {
+variable "rg_name" {
   type = string
 }
 

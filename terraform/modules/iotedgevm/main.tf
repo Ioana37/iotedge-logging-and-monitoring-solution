@@ -18,11 +18,9 @@ locals {
   vm_userpassword  = var.vm_user_password != "" ? var.vm_user_password : random_password.vm_user_password.result
 }
 
-### Create Virtual IoT Edge Device ###
-
 resource "azurerm_public_ip" "iot_edge" {
   name                = "${local.dns_label_prefix}-ip"
-  resource_group_name = var.resource_group_name
+  resource_group_name = var.rg_name
   location            = var.location
   allocation_method   = "Dynamic"
   domain_name_label   = "${local.dns_label_prefix}-${var.random_id}"
@@ -30,7 +28,7 @@ resource "azurerm_public_ip" "iot_edge" {
 
 resource "azurerm_network_security_group" "iot_edge" {
   name                = "${local.dns_label_prefix}-nsg"
-  resource_group_name = var.resource_group_name
+  resource_group_name = var.rg_name
   location            = var.location
 
   security_rule {
@@ -49,7 +47,7 @@ resource "azurerm_network_security_group" "iot_edge" {
 resource "azurerm_virtual_network" "iot_edge" {
   name                = "${local.dns_label_prefix}-vnet"
   location            = var.location
-  resource_group_name = var.resource_group_name
+  resource_group_name = var.rg_name
   address_space       = ["10.0.0.0/16"]
 
   subnet {
@@ -62,7 +60,7 @@ resource "azurerm_virtual_network" "iot_edge" {
 resource "azurerm_network_interface" "iot_edge" {
   name                = "${local.dns_label_prefix}-nic"
   location            = var.location
-  resource_group_name = var.resource_group_name
+  resource_group_name = var.rg_name
 
   ip_configuration {
     name                          = "${local.dns_label_prefix}-ipconfig"
@@ -75,7 +73,7 @@ resource "azurerm_network_interface" "iot_edge" {
 resource "azurerm_linux_virtual_machine" "iot_edge" {
   name                            = "${local.dns_label_prefix}-vm"
   location                        = var.location
-  resource_group_name             = var.resource_group_name
+  resource_group_name             = var.rg_name
   admin_username                  = local.vm_username
   disable_password_authentication = false
   admin_password                  = local.vm_userpassword
