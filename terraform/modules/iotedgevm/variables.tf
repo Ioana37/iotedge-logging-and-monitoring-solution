@@ -32,3 +32,6 @@ variable "iot_edge_connection_string" {
   type = string
 }
 
+variable "create_iot_resources" {
+  type    = bool
+}

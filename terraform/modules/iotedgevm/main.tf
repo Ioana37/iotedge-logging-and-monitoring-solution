@@ -15,10 +15,11 @@ resource "random_password" "vm_user_password" {
 locals {
   dns_label_prefix = "${var.name_identifier}-iot-edge"
   vm_username      = var.vm_user_name != "" ? var.vm_user_name : random_string.vm_user_name.result
-  vm_userpassword  = var.vm_user_password != "" ? var.vm_user_password : random_password.vm_user_password.result
+  vm_userpassword  = var.vm_user_password != "" ? var.vm_user_password : random_password.vm_user_password.result 
 }
 
 resource "azurerm_public_ip" "iot_edge" {
+  count               = var.create_iot_resources == true ? 1 : 0
   name                = "${local.dns_label_prefix}-ip"
   resource_group_name = var.rg_name
   location            = var.location
@@ -27,6 +28,7 @@ resource "azurerm_public_ip" "iot_edge" {
 }
 
 resource "azurerm_network_security_group" "iot_edge" {
+  count               = var.create_iot_resources == true ? 1 : 0
   name                = "${local.dns_label_prefix}-nsg"
   resource_group_name = var.rg_name
   location            = var.location
@@ -45,6 +47,7 @@ resource "azurerm_network_security_group" "iot_edge" {
 }
 
 resource "azurerm_virtual_network" "iot_edge" {
+  count               = var.create_iot_resources == true ? 1 : 0
   name                = "${local.dns_label_prefix}-vnet"
   location            = var.location
   resource_group_name = var.rg_name
@@ -53,11 +56,12 @@ resource "azurerm_virtual_network" "iot_edge" {
   subnet {
     name           = "${local.dns_label_prefix}-subnet"
     address_prefix = "10.0.1.0/24"
-    security_group = azurerm_network_security_group.iot_edge.id
+    security_group = azurerm_network_security_group.iot_edge[0].id
   }
 }
 
 resource "azurerm_network_interface" "iot_edge" {
+  count               = var.create_iot_resources == true ? 1 : 0
   name                = "${local.dns_label_prefix}-nic"
   location            = var.location
   resource_group_name = var.rg_name
@@ -65,12 +69,13 @@ resource "azurerm_network_interface" "iot_edge" {
   ip_configuration {
     name                          = "${local.dns_label_prefix}-ipconfig"
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.iot_edge.id
-    subnet_id                     = azurerm_virtual_network.iot_edge.subnet.*.id[0]
+    public_ip_address_id          = azurerm_public_ip.iot_edge[0].id
+    subnet_id                     = azurerm_virtual_network.iot_edge[0].subnet.*.id[0]
   }
 }
 
 resource "azurerm_linux_virtual_machine" "iot_edge" {
+  count                           = var.create_iot_resources == true ? 1 : 0
   name                            = "${local.dns_label_prefix}-vm"
   location                        = var.location
   resource_group_name             = var.rg_name
@@ -81,7 +86,7 @@ resource "azurerm_linux_virtual_machine" "iot_edge" {
   allow_extension_operations      = false
   size                            = "Standard_DS1_v2"
   network_interface_ids = [
-    azurerm_network_interface.iot_edge.id
+    azurerm_network_interface.iot_edge[0].id
   ]
   custom_data = base64encode(replace(file("${path.module}/cloud-init.yaml"), "<REPLACE_WITH_CONNECTION_STRING>", var.iot_edge_connection_string))
 

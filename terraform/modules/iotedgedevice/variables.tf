@@ -10,3 +10,7 @@ variable "script_path" {
   type    = string
   default = "../../scripts"
 }
+
+variable "create_iot_resources" {
+  type    = bool
+}

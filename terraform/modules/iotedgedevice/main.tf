@@ -2,6 +2,7 @@
 # https://github.com/hashicorp/terraform-provider-azurerm/issues/12604 is implemented
 
 resource "null_resource" "create_edge_device" {
+  count         = var.create_iot_resources == true ? 1 : 0
   provisioner "local-exec" {
     when        = create
     command     = "${var.script_path}/create-edge-device.sh ${var.edge_device_name} ${var.iothub_name} ${var.script_path}"

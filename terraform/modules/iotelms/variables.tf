@@ -30,3 +30,7 @@ variable "name_identifier" {
 variable "send_metrics_device_to_cloud" {
   type = bool
 }
+
+variable "create_iot_resources" {
+  type    = bool
+}

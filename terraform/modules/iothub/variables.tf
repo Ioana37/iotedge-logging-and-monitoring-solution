@@ -21,3 +21,7 @@ variable "tier" {
 variable "units" {
   type = string
 }
+
+variable "create_iot_resources" {
+  type    = bool
+}
