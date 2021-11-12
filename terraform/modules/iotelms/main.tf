@@ -77,6 +77,10 @@ resource "azurerm_function_app" "elms" {
   storage_account_access_key = azurerm_storage_account.elmsfunc.primary_access_key
   version                    = "~3"
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   app_settings = {
     "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.elms.instrumentation_key
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.elms.connection_string
@@ -85,14 +89,14 @@ resource "azurerm_function_app" "elms" {
     "ContainerName"                         = azurerm_storage_container.elmslogs.name
     "CompressForUpload"                     = true
     "DeviceQuery"                           = "SELECT * FROM devices WHERE tags.logPullEnabled='true'"
-    "EventHubConnectionString"              = var.send_metrics_device_to_cloud == true ? azurerm_eventhub_namespace_authorization_rule.elms[0].primary_connection_string : ""
     "EventHubConsumerGroup"                 = var.send_metrics_device_to_cloud == true ? azurerm_eventhub_consumer_group.elms[0].name : ""
     "EventHubName"                          = var.send_metrics_device_to_cloud == true ? azurerm_eventhub.elms[0].name : ""
+    "EventHub__fullyQualifiedNamespace"     = var.send_metrics_device_to_cloud == true ? "${azurerm_eventhub_namespace.elms[0].name}.servicebus.windows.net" : ""
     "FUNCTIONS_WORKER_RUNTIME"              = "dotnet"
     "HASH"                                  = base64encode(filesha256(var.functionapp))
     "HttpTriggerFunction"                   = "InvokeUploadModuleLogs"
     "HostUrl"                               = "https://func-${var.name_identifier}-${var.random_id}.azurewebsites.net"
-    "HubConnectionString"                   = azurerm_iothub_shared_access_policy.elms.primary_connection_string
+    "HubHostName"                           = "${var.iothub_name}.azure-devices.net"
     "HubResourceId"                         = var.iothub_id
     "LogsContentType"                       = "json"
     "LogsEncoding"                          = "gzip"
@@ -204,14 +208,6 @@ resource "azurerm_eventhub_consumer_group" "elms" {
   eventhub_name       = azurerm_eventhub.elms[0].name
 }
 
-resource "azurerm_eventhub_namespace_authorization_rule" "elms" {
-  count               = var.send_metrics_device_to_cloud == true ? 1 : 0
-  name                = "listen-rule"
-  resource_group_name = var.rg_name
-  namespace_name      = azurerm_eventhub_namespace.elms[0].name
-  listen              = true
-}
-
 resource "azurerm_eventhub_authorization_rule" "elms" {
   count               = var.send_metrics_device_to_cloud == true ? 1 : 0
   name                = "send-rule"
@@ -242,13 +238,19 @@ resource "azurerm_iothub_route" "elms" {
   enabled        = true
 }
 
-resource "azurerm_iothub_shared_access_policy" "elms" {
-  name                = "iotedgelogs"
-  resource_group_name = var.rg_name
-  iothub_name         = var.iothub_name
+data "azurerm_subscription" "primary" {
+}
 
-  registry_read   = true
-  registry_write  = false
-  service_connect = true
-  device_connect  = false
+resource "azurerm_role_assignment" "elms-iothub" {
+  scope                = "${data.azurerm_subscription.primary.id}/resourcegroups/${var.rg_name}/providers/Microsoft.Devices/IotHubs/${var.iothub_name}"
+  role_definition_name = "IoT Hub Data Contributor"
+  principal_id         = azurerm_function_app.elms.identity.0.principal_id
+  description          = "IoT Hub Data Contributor for Function App"
+}
+
+resource "azurerm_role_assignment" "elms-eventhub" {
+  scope                = "${data.azurerm_subscription.primary.id}/resourcegroups/${var.rg_name}/providers/Microsoft.EventHub/namespaces/${azurerm_eventhub_namespace.elms[0].name}"
+  role_definition_name = "Azure Event Hubs Data Receiver"
+  principal_id         = azurerm_function_app.elms.identity.0.principal_id
+  description          = "Azure Event Hubs Data Receiver for Function App"
 }
