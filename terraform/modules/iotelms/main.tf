@@ -107,7 +107,8 @@ resource "azurerm_function_app" "elms" {
     "LogType"                               = "iotedgemodulelogs"
     "MetricsEncoding"                       = "gzip"
     "QueueName"                             = azurerm_storage_queue.elms.name
-    "StorageConnectionString"               = azurerm_storage_account.elmslogs.primary_connection_string
+    "StorageAccountName"                    = azurerm_storage_account.elmslogs.name
+    "StorageName__serviceUri"               = "https://${azurerm_storage_account.elmslogs.name}.queue.core.windows.net/"
     "WorkspaceApiVersion"                   = "2016-04-01"
     "WorkspaceDomainSuffix"                 = "azure.com"
     "WorkspaceId"                           = azurerm_log_analytics_workspace.elms.workspace_id
@@ -253,4 +254,25 @@ resource "azurerm_role_assignment" "elms-eventhub" {
   role_definition_name = "Azure Event Hubs Data Receiver"
   principal_id         = azurerm_function_app.elms.identity.0.principal_id
   description          = "Azure Event Hubs Data Receiver for Function App"
+}
+
+# resource "azurerm_role_assignment" "elms-storageaccount" {
+#   scope                = "${data.azurerm_subscription.primary.id}/resourcegroups/${var.rg_name}/providers/Microsoft.Storage/storageAccounts/${azurerm_storage_account.elmslogs.name}"
+#   role_definition_name = "Storage Account Contributor"
+#   principal_id         = azurerm_function_app.elms.identity.0.principal_id
+#   description          = "Storage Account Contributor for Function App"
+# }
+
+resource "azurerm_role_assignment" "elms-storagequeue" {
+  scope                = "${data.azurerm_subscription.primary.id}/resourcegroups/${var.rg_name}/providers/Microsoft.Storage/storageAccounts/${azurerm_storage_account.elmslogs.name}"
+  role_definition_name = "Storage Queue Data Contributor"
+  principal_id         = azurerm_function_app.elms.identity.0.principal_id
+  description          = "Storage Queue Data Contributor for Function App"
+}
+
+resource "azurerm_role_assignment" "elms-storageblob" {
+  scope                = "${data.azurerm_subscription.primary.id}/resourcegroups/${var.rg_name}/providers/Microsoft.Storage/storageAccounts/${azurerm_storage_account.elmslogs.name}"
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_function_app.elms.identity.0.principal_id
+  description          = "Storage Blob Data Contributor for Function App"
 }
