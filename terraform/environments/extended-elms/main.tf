@@ -24,19 +24,19 @@ resource "azurerm_resource_group" "elms" {
 }
 
 module "iothub" {
-  source                    = "../../modules/iothub"
-  rg_name                   = azurerm_resource_group.elms.name
-  location                  = var.location
-  random_id                 = lower(random_id.elms.hex)
-  name_identifier           = var.name_identifier
-  tier                      = var.tier
-  units                     = var.units
+  source          = "../../modules/iothub"
+  rg_name         = azurerm_resource_group.elms.name
+  location        = var.location
+  random_id       = lower(random_id.elms.hex)
+  name_identifier = var.name_identifier
+  tier            = var.tier
+  units           = var.units
 }
 
 module "iotedgedevice" {
-  source                    = "../../modules/iotedgedevice"
-  iothub_name               = module.iothub.iothub_name
-  edge_device_name          = "edge-device-01"
+  source           = "../../modules/iotedgedevice"
+  iothub_name      = module.iothub.iothub_name
+  edge_device_name = "edge-device-01"
 }
 
 module "iotedgevm" {
