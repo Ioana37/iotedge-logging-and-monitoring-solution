@@ -267,6 +267,7 @@ resource "azurerm_role_assignment" "elms-iothub" {
 }
 
 resource "azurerm_role_assignment" "elms-eventhub" {
+  count                = var.send_metrics_device_to_cloud == true ? 1 : 0
   scope                = "${data.azurerm_subscription.primary.id}/resourcegroups/${var.rg_name}/providers/Microsoft.EventHub/namespaces/${azurerm_eventhub_namespace.elms[0].name}"
   role_definition_name = "Azure Event Hubs Data Receiver"
   principal_id         = azurerm_function_app.elms.identity.0.principal_id
