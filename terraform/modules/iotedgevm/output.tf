@@ -1,3 +1,3 @@
-output "vm_userpassword" {
-  value = local.vm_userpassword
+output "vm_user_password" {
+  value = local.vm_user_password
 }

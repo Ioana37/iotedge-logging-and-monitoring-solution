@@ -1,3 +1,3 @@
-output "vm_userpassword" {
-  value = module.iotedgevm.vm_userpassword
+output "vm_user_password" {
+  value = module.iotedgevm.vm_user_password
 }
