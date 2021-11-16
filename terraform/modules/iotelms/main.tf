@@ -137,8 +137,8 @@ resource "null_resource" "check_key" {
   }
 
   provisioner "local-exec" {
-    command     = "az functionapp config appsettings set --name ${azurerm_function_app.elms.name} --resource-group ${var.rg_name} --settings \"HostKey=${data.azurerm_function_app_host_keys.elms.default_function_key}\""
-    interpreter = ["/bin/bash", "-c"] # ["Powershell", "-command"]
+    command     = "az functionapp config appsettings set --name ${azurerm_function_app.elms.name} --resource-group ${var.rg_name} --settings \"HostKey=${data.azurerm_function_app_host_keys.elms.default_function_key}\" --output none"
+    interpreter = ["/bin/bash", "-c"]
   }
 }
 
@@ -242,11 +242,28 @@ resource "azurerm_iothub_route" "elms" {
 data "azurerm_subscription" "primary" {
 }
 
+resource "azurerm_role_definition" "elms-iothub" {
+  name        = "ELMS IoT Hub"
+  scope       = data.azurerm_subscription.primary.id
+  description = "IoT Hub Registry read and Service connect for ELMS"
+
+  permissions {
+    data_actions = [
+      "Microsoft.Devices/IotHubs/*/read",
+      "Microsoft.Devices/IotHubs/directMethods/invoke/action"
+    ]
+  }
+
+  assignable_scopes = [
+    "${data.azurerm_subscription.primary.id}/resourcegroups/${var.rg_name}/providers/Microsoft.Devices/IotHubs/${var.iothub_name}"
+  ]
+}
+
 resource "azurerm_role_assignment" "elms-iothub" {
-  scope                = "${data.azurerm_subscription.primary.id}/resourcegroups/${var.rg_name}/providers/Microsoft.Devices/IotHubs/${var.iothub_name}"
-  role_definition_name = "IoT Hub Data Contributor"
-  principal_id         = azurerm_function_app.elms.identity.0.principal_id
-  description          = "IoT Hub Data Contributor for Function App"
+  scope              = "${data.azurerm_subscription.primary.id}/resourcegroups/${var.rg_name}/providers/Microsoft.Devices/IotHubs/${var.iothub_name}"
+  role_definition_id = azurerm_role_definition.elms-iothub.role_definition_resource_id
+  principal_id       = azurerm_function_app.elms.identity.0.principal_id
+  description        = "IoT Hub Registry read and Service connect for Function App"
 }
 
 resource "azurerm_role_assignment" "elms-eventhub" {
@@ -256,12 +273,6 @@ resource "azurerm_role_assignment" "elms-eventhub" {
   description          = "Azure Event Hubs Data Receiver for Function App"
 }
 
-# resource "azurerm_role_assignment" "elms-storageaccount" {
-#   scope                = "${data.azurerm_subscription.primary.id}/resourcegroups/${var.rg_name}/providers/Microsoft.Storage/storageAccounts/${azurerm_storage_account.elmslogs.name}"
-#   role_definition_name = "Storage Account Contributor"
-#   principal_id         = azurerm_function_app.elms.identity.0.principal_id
-#   description          = "Storage Account Contributor for Function App"
-# }
 
 resource "azurerm_role_assignment" "elms-storagequeue" {
   scope                = "${data.azurerm_subscription.primary.id}/resourcegroups/${var.rg_name}/providers/Microsoft.Storage/storageAccounts/${azurerm_storage_account.elmslogs.name}"
