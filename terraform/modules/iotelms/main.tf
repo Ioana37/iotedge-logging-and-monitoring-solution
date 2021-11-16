@@ -243,7 +243,7 @@ data "azurerm_subscription" "primary" {
 }
 
 resource "azurerm_role_definition" "elms-iothub" {
-  name        = "ELMS IoT Hub"
+  name        = "ELMS IoT Hub (${var.random_id})"
   scope       = data.azurerm_subscription.primary.id
   description = "IoT Hub Registry read and Service connect for ELMS"
 
