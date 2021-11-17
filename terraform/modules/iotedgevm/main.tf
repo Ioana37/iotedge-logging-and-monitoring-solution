@@ -26,24 +26,6 @@ resource "azurerm_public_ip" "iot_edge" {
   domain_name_label   = "${local.dns_label_prefix}-${var.random_id}"
 }
 
-resource "azurerm_network_security_group" "iot_edge" {
-  name                = "${local.dns_label_prefix}-nsg"
-  resource_group_name = var.rg_name
-  location            = var.location
-
-  security_rule {
-    name                       = "SSHPortInbound"
-    priority                   = 1010
-    access                     = "Allow"
-    direction                  = "Inbound"
-    protocol                   = "Tcp"
-    destination_port_range     = "22"
-    source_address_prefix      = "*"
-    source_port_range          = "*"
-    destination_address_prefix = "*"
-  }
-}
-
 resource "azurerm_virtual_network" "iot_edge" {
   name                = "${local.dns_label_prefix}-vnet"
   location            = var.location
@@ -53,7 +35,6 @@ resource "azurerm_virtual_network" "iot_edge" {
   subnet {
     name           = "${local.dns_label_prefix}-subnet"
     address_prefix = "10.0.1.0/24"
-    security_group = azurerm_network_security_group.iot_edge.id
   }
 }
 
