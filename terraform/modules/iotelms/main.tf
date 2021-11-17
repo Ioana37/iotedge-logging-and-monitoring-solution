@@ -242,10 +242,12 @@ resource "azurerm_iothub_route" "elms" {
 data "azurerm_subscription" "primary" {
 }
 
+# Custom role for accessing IoT Hub
+# IoT Hub Contributor built-in role also has the needed permissions and more
 resource "azurerm_role_definition" "elms-iothub" {
   name        = "ELMS IoT Hub (${var.random_id})"
   scope       = data.azurerm_subscription.primary.id
-  description = "IoT Hub Registry read and Service connect for ELMS"
+  description = "IoT Hub read and direct method invocation permissions for ELMS"
 
   permissions {
     data_actions = [
@@ -263,7 +265,7 @@ resource "azurerm_role_assignment" "elms-iothub" {
   scope              = "${data.azurerm_subscription.primary.id}/resourcegroups/${var.rg_name}/providers/Microsoft.Devices/IotHubs/${var.iothub_name}"
   role_definition_id = azurerm_role_definition.elms-iothub.role_definition_resource_id
   principal_id       = azurerm_function_app.elms.identity.0.principal_id
-  description        = "IoT Hub Registry read and Service connect for Function App"
+  description        = "IoT Hub read and direct method invocation permissions for Function App"
 }
 
 resource "azurerm_role_assignment" "elms-eventhub" {
