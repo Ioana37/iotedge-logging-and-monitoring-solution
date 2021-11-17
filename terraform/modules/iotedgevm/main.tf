@@ -15,7 +15,7 @@ resource "random_password" "vm_user_password" {
 locals {
   dns_label_prefix = "${var.name_identifier}-iot-edge"
   vm_username      = var.vm_user_name != "" ? var.vm_user_name : random_string.vm_user_name.result
-  vm_user_password  = var.vm_user_password != "" ? var.vm_user_password : random_password.vm_user_password.result
+  vm_user_password = var.vm_user_password != "" ? var.vm_user_password : random_password.vm_user_password.result
 }
 
 resource "azurerm_public_ip" "iot_edge" {
