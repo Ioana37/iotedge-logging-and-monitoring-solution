@@ -172,6 +172,7 @@ resource "azurerm_application_insights" "elms" {
   name                = "appi-${var.name_identifier}-${var.random_id}"
   resource_group_name = var.rg_name
   location            = var.location
+  workspace_id        = azurerm_log_analytics_workspace.elms.id
   application_type    = "web"
 }
 
